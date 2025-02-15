@@ -1,0 +1,79 @@
+[
+  {
+    "id": "11111111-1111-1111-1111-111111111111",
+    "firstName": "John",
+    "lastName": "Doe",
+    "phone": "555-0101",
+    "mail": "john.doe@example.com"
+  },
+  {
+    "id": "22222222-2222-2222-2222-222222222222",
+    "firstName": "Jane",
+    "lastName": "Smith",
+    "phone": "555-0102",
+    "mail": "jane.smith@example.com"
+  },
+  {
+    "id": "33333333-3333-3333-3333-333333333333",
+    "firstName": "Michael",
+    "lastName": "Johnson",
+    "phone": "555-0103",
+    "mail": "michael.johnson@example.com"
+  },
+  {
+    "id": "44444444-4444-4444-4444-444444444444",
+    "firstName": "Emily",
+    "lastName": "Davis",
+    "phone": "555-0104",
+    "mail": "emily.davis@example.com"
+  },
+  {
+    "id": "55555555-5555-5555-5555-555555555555",
+    "firstName": "William",
+    "lastName": "Brown",
+    "phone": "555-0105",
+    "mail": "william.brown@example.com"
+  },
+  {
+    "id": "66666666-6666-6666-6666-666666666666",
+    "firstName": "Olivia",
+    "lastName": "Wilson",
+    "phone": "555-0106",
+    "mail": "olivia.wilson@example.com"
+  },
+  {
+    "id": "77777777-7777-7777-7777-777777777777",
+    "firstName": "James",
+    "lastName": "Taylor",
+    "phone": "555-0107",
+    "mail": "james.taylor@example.com"
+  },
+  {
+    "id": "88888888-8888-8888-8888-888888888888",
+    "firstName": "Sophia",
+    "lastName": "Anderson",
+    "phone": "555-0108",
+    "mail": "sophia.anderson@example.com"
+  },
+  {
+    "id": "99999999-9999-9999-9999-999999999999",
+    "firstName": "Benjamin",
+    "lastName": "Thomas",
+    "phone": "555-0109",
+    "mail": "benjamin.thomas@example.com"
+  },
+  {
+    "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "firstName": "Ava",
+    "lastName": "Jackson",
+    "phone": "555-0110",
+    "mail": "ava.jackson@example.com"
+  },
+  {
+    "id": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+    "firstName": "Ethan",
+    "lastName": "White",
+    "phone": "555-0111",
+    "mail": "ethan.white@example.com"
+  }
+]

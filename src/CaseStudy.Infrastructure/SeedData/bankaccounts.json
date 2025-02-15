@@ -1,0 +1,68 @@
+[
+  {
+    "id": "11111111-1111-1111-1111-111111111111",
+    "iban": "DE89370400440532013000",
+    "bic": "COBADEFFXXX",
+    "name": "Bank Account 1"
+  },
+  {
+    "id": "22222222-2222-2222-2222-222222222222",
+    "iban": "GB82WEST12345698765432",
+    "bic": "NWBKGB2L",
+    "name": "Bank Account 2"
+  },
+  {
+    "id": "33333333-3333-3333-3333-333333333333",
+    "iban": "FR7630006000011234567890189",
+    "bic": "AGRIFRPP",
+    "name": "Bank Account 3"
+  },
+  {
+    "id": "44444444-4444-4444-4444-444444444444",
+    "iban": "IT60X0542811101000000123456",
+    "bic": "BCITITMM",
+    "name": "Bank Account 4"
+  },
+  {
+    "id": "55555555-5555-5555-5555-555555555555",
+    "iban": "ES9121000418450200051332",
+    "bic": "CAIXESBBXXX",
+    "name": "Bank Account 5"
+  },
+  {
+    "id": "66666666-6666-6666-6666-666666666666",
+    "iban": "NL91ABNA0417164300",
+    "bic": "ABNANL2A",
+    "name": "Bank Account 6"
+  },
+  {
+    "id": "77777777-7777-7777-7777-777777777777",
+    "iban": "BE68539007547034",
+    "bic": "KABA BE BB",
+    "name": "Bank Account 7"
+  },
+  {
+    "id": "88888888-8888-8888-8888-888888888888",
+    "iban": "CH9300762011623852957",
+    "bic": "UBSWCHZH80A",
+    "name": "Bank Account 8"
+  },
+  {
+    "id": "99999999-9999-9999-9999-999999999999",
+    "iban": "SE4550000000058398257466",
+    "bic": "ESSESESS",
+    "name": "Bank Account 9"
+  },
+  {
+    "id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "iban": "DK5000400440116243",
+    "bic": "DABADKKK",
+    "name": "Bank Account 10"
+  },
+  {
+    "id": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+    "iban": "FI2112345600000785",
+    "bic": "NDEAFIHH",
+    "name": "Bank Account 11"
+  }
+]
