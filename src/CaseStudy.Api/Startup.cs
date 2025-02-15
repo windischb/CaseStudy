@@ -1,6 +1,7 @@
 
 using CaseStudy.Api.Helpers;
 using CaseStudy.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.OpenApi.Models;
 
 namespace CaseStudy.Api;
@@ -13,6 +14,29 @@ public class Startup(IConfiguration configuration)
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton(_ => Configuration);
+
+        services
+            .AddStackExchangeRedisOutputCache(opts =>
+            {
+                opts.Configuration = Configuration.RedisSettings.ConnectionString;
+                opts.InstanceName = "CaseStudy";
+                
+            })
+            .AddOutputCache(opts =>
+            {
+                opts.DefaultExpirationTimeSpan = TimeSpan.FromMinutes(10);
+                opts.AddPolicy("TagById", new TagFromRouteValuesOutputCachePolicy(request =>
+                {
+                    var actionDescriptor = request.HttpContext.GetEndpoint()?.Metadata
+                        .GetMetadata<ControllerActionDescriptor>();
+                    var s = request.HttpContext.Request.RouteValues["id"]?.ToString();
+                    if (actionDescriptor is null || string.IsNullOrWhiteSpace(s))
+                    {
+                        return null;
+                    }
+                    return $"TagById-{actionDescriptor.ControllerName}-{s}";
+                }));
+            });
 
         services.AddInfrastructureServices(Configuration.DbSettings.ConnectionString);
 
@@ -48,6 +72,7 @@ public class Startup(IConfiguration configuration)
         app.UseResponseCompression();
 
         app.UseRouting();
+        app.UseOutputCache();
 
         if (env.IsDevelopment())
         {

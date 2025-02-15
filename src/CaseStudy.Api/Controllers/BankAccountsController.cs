@@ -1,14 +1,16 @@
 ﻿using CaseStudy.Application.Interfaces;
 using CaseStudy.Domain;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 
 namespace CaseStudy.Api.Controllers;
 
 [Route("api/bankaccounts")]
 [ApiController]
-public class BankAccountsController(IBankAccountRepository bankAccountRepository) : ControllerBase
+public class BankAccountsController(IBankAccountRepository bankAccountRepository, IOutputCacheStore cacheStore) : ControllerBase
 {
     [HttpGet]
+    [OutputCache(Tags = ["BankAccounts-All"])]
     public async Task<ActionResult<IEnumerable<BankAccount>>> GetAll()
     {
         var bankAccounts = await bankAccountRepository.GetAllAsync();
@@ -16,6 +18,7 @@ public class BankAccountsController(IBankAccountRepository bankAccountRepository
     }
         
     [HttpGet("{id}")]
+    [OutputCache(PolicyName = "TagById")]
     public async Task<ActionResult<BankAccount>> GetById(Guid id)
     {
         var bankAccount = await bankAccountRepository.GetByIdAsync(id);
@@ -28,6 +31,7 @@ public class BankAccountsController(IBankAccountRepository bankAccountRepository
     public async Task<IActionResult> Create([FromBody] BankAccount vendor)
     {
         await bankAccountRepository.AddAsync(vendor);
+        await cacheStore.EvictByTagAsync("BankAccounts-All", this.HttpContext.RequestAborted);
         return CreatedAtAction(nameof(GetById), new { id = vendor.Id }, vendor);
     }
         
@@ -38,6 +42,8 @@ public class BankAccountsController(IBankAccountRepository bankAccountRepository
             return BadRequest();
             
         await bankAccountRepository.UpdateAsync(vendor);
+        await cacheStore.EvictByTagAsync("BankAccounts-All", this.HttpContext.RequestAborted);
+        await cacheStore.EvictByTagAsync($"TagById-BankAccounts-{id}", this.HttpContext.RequestAborted);
         return NoContent();
     }
         
@@ -45,6 +51,8 @@ public class BankAccountsController(IBankAccountRepository bankAccountRepository
     public async Task<IActionResult> Delete(Guid id)
     {
         await bankAccountRepository.DeleteAsync(id);
+        await cacheStore.EvictByTagAsync("BankAccounts-All", this.HttpContext.RequestAborted);
+        await cacheStore.EvictByTagAsync($"TagById-BankAccounts-{id}", this.HttpContext.RequestAborted);
         return NoContent();
     }
 }

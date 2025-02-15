@@ -23,7 +23,7 @@ public class StartUpConfiguration
     public Logging Logging { get; set; } = new();
 
     public DatabaseConfiguration DbSettings { get; } = new();
-    
+    public RedisConfiguration RedisSettings { get; } = new();
 }
 
 public class Logging
@@ -56,4 +56,9 @@ public class Logging
 public class DatabaseConfiguration
 {
     public string ConnectionString { get; set; } = "Host=127.0.0.1;Database=CaseStudy;Username=postgres;Password=postgres";
+}
+
+public class RedisConfiguration
+{
+    public string ConnectionString { get; set; } = "127.0.0.1:6379";
 }
