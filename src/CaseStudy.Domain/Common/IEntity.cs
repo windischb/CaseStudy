@@ -1,4 +1,4 @@
-﻿namespace CaseStudy.Domain.Interfaces;
+﻿namespace CaseStudy.Domain.Common;
 
 public interface IEntity
 {

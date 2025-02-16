@@ -35,7 +35,7 @@ public class Program
 
     public static IHostBuilder CreateHostBuilder(string[] args) =>
         Host.CreateDefaultBuilder(args)
-            .ConfigureAppConfiguration((hostingContext, config) =>
+            .ConfigureAppConfiguration((_, config) =>
             {
                 if (!Debugger.IsAttached)
                 {
@@ -46,19 +46,22 @@ public class Program
             .UseSerilog((hostingContext, loggerConfiguration) =>
                 {
                     var startUpConfiguration = hostingContext.Configuration.Get<StartUpConfiguration>();
-                    foreach (var (key, value) in startUpConfiguration.Logging.LogLevels)
+                    if (startUpConfiguration is not null)
                     {
-                        if (key.Equals("default", StringComparison.OrdinalIgnoreCase) || key.Equals("*", StringComparison.OrdinalIgnoreCase))
+                        foreach (var (key, value) in startUpConfiguration.Logging.LogLevels)
                         {
-                            loggerConfiguration.MinimumLevel.Is(value);
-                        }
-                        else
-                        {
-                            loggerConfiguration.MinimumLevel.Override(key, value);
-                        }
+                            if (key.Equals("default", StringComparison.OrdinalIgnoreCase) || key.Equals("*", StringComparison.OrdinalIgnoreCase))
+                            {
+                                loggerConfiguration.MinimumLevel.Is(value);
+                            }
+                            else
+                            {
+                                loggerConfiguration.MinimumLevel.Override(key, value);
+                            }
 
+                        }
                     }
-
+                    
                     loggerConfiguration.WriteTo.Console(theme: AnsiConsoleTheme.Code);
                 }
             )

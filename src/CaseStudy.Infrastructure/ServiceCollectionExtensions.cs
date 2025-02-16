@@ -1,4 +1,4 @@
-﻿using CaseStudy.Application.Interfaces;
+﻿using CaseStudy.Application.Common;
 using CaseStudy.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

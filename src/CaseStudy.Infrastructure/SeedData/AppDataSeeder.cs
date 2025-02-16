@@ -1,13 +1,13 @@
 using System.Text.Json;
-using CaseStudy.Domain.Interfaces;
+using CaseStudy.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace CaseStudy.Infrastructure.SeedData;
 
 public static class AppDataSeeder
 {
-
     private static readonly JsonSerializerOptions _jsonSerializerOptions = new() { PropertyNameCaseInsensitive = true };
+
     public static async Task SeedAsync(AppDbContext context)
     {
         await SeedDataAsync(context, "vendors.json", context.Vendors);

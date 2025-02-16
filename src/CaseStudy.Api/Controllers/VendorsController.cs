@@ -1,5 +1,6 @@
-﻿using CaseStudy.Application.Interfaces;
-using CaseStudy.Domain;
+﻿using CaseStudy.Application;
+using CaseStudy.Application.Common;
+using ErrorOr;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
@@ -9,21 +10,21 @@ namespace CaseStudy.Api.Controllers;
 [Route("api/vendors")]
 [ApiController]
 [Authorize]
-public class VendorsController(IVendorRepository vendorRepository, IOutputCacheStore cacheStore) : ControllerBase
+public class VendorsController(IVendorService vendorService, IOutputCacheStore cacheStore) : ControllerBase
 {
     [HttpGet]
     [OutputCache(PolicyName = "TagById")]
-    public async Task<ActionResult<IEnumerable<Vendor>>> GetAll()
+    public async Task<ActionResult<IEnumerable<VendorDto>>> GetAll()
     {
-        var vendors = await vendorRepository.GetAllAsync();
+        var vendors = await vendorService.GetAllAsync();
         return Ok(vendors);
     }
         
     [HttpGet("{id}")]
     [OutputCache(PolicyName = "TagById")]
-    public async Task<ActionResult<Vendor>> GetById(Guid id)
+    public async Task<ActionResult<VendorDto>> GetById(Guid id)
     {
-        var vendor = await vendorRepository.GetByIdAsync(id);
+        var vendor = await vendorService.GetByIdAsync(id);
         if (vendor == null)
             return NotFound();
         return Ok(vendor);
@@ -31,23 +32,28 @@ public class VendorsController(IVendorRepository vendorRepository, IOutputCacheS
         
     [HttpPost]
     [Authorize(Policy = "Admin")]
-    public async Task<IActionResult> Create([FromBody] Vendor vendor)
+    public async Task<IActionResult> Create([FromBody] CreateVendorDto dto)
     {
-        await vendorRepository.AddAsync(vendor);
-        await cacheStore.EvictByTagAsync("Vendors-All", this.HttpContext.RequestAborted);
-        return CreatedAtAction(nameof(GetById), new { id = vendor.Id }, vendor);
+        var newVendorId = await vendorService.AddAsync(dto);
+        await cacheStore.EvictByTagAsync("Vendors-All", HttpContext.RequestAborted);
+        return CreatedAtAction(nameof(GetById), new { id = newVendorId }, dto);
     }
         
     [HttpPut("{id}")]
     [Authorize(Policy = "Admin")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] Vendor vendor)
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateVendorDto dto)
     {
-        if (id != vendor.Id)
-            return BadRequest();
-            
-        await vendorRepository.UpdateAsync(vendor);
-        await cacheStore.EvictByTagAsync("Vendors-All", this.HttpContext.RequestAborted);
-        await cacheStore.EvictByTagAsync($"TagById-Vendors-{id}", this.HttpContext.RequestAborted);
+        var updateResult = await vendorService.UpdateAsync(id, dto);
+        if (updateResult.IsError)
+        {
+            if (updateResult.FirstError == Error.NotFound())
+            {
+                return NotFound(updateResult.FirstError.Code);
+            }
+            return BadRequest(updateResult.FirstError);
+        }
+        await cacheStore.EvictByTagAsync("Vendors-All", HttpContext.RequestAborted);
+        await cacheStore.EvictByTagAsync($"TagById-Vendors-{id}", HttpContext.RequestAborted);
         return NoContent();
     }
         
@@ -55,9 +61,9 @@ public class VendorsController(IVendorRepository vendorRepository, IOutputCacheS
     [Authorize(Policy = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        await vendorRepository.DeleteAsync(id);
-        await cacheStore.EvictByTagAsync("Vendors-All", this.HttpContext.RequestAborted);
-        await cacheStore.EvictByTagAsync($"TagById-Vendors-{id}", this.HttpContext.RequestAborted);
+        await vendorService.DeleteAsync(id);
+        await cacheStore.EvictByTagAsync("Vendors-All", HttpContext.RequestAborted);
+        await cacheStore.EvictByTagAsync($"TagById-Vendors-{id}", HttpContext.RequestAborted);
         return NoContent();
     }
 }

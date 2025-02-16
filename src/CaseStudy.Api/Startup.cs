@@ -1,7 +1,7 @@
 
 using CaseStudy.Api.Helpers;
+using CaseStudy.Application;
 using CaseStudy.Infrastructure;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.OpenApi.Models;
 
@@ -49,8 +49,8 @@ public class Startup(IConfiguration configuration)
                 options.AddPolicy("Admin", builder => builder.RequireRole("Administrator"));
             })
             .AddAuthentication();
-            
 
+        services.AddApplicationServices();
         services.AddInfrastructureServices(Configuration.DbSettings.ConnectionString);
 
         services.AddOpenApi(options =>

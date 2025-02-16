@@ -1,4 +1,4 @@
-﻿using CaseStudy.Domain.Interfaces;
+﻿using CaseStudy.Domain.Common;
 
 namespace CaseStudy.Domain;
 

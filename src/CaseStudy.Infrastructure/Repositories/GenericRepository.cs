@@ -1,6 +1,6 @@
-﻿using CaseStudy.Application.Interfaces;
+﻿using CaseStudy.Application.Common;
 using CaseStudy.Domain;
-using CaseStudy.Domain.Interfaces;
+using CaseStudy.Domain.Common;
 using Microsoft.EntityFrameworkCore;
 
 namespace CaseStudy.Infrastructure.Repositories;

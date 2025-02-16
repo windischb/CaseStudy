@@ -1,7 +1,7 @@
 ﻿using CaseStudy.Domain;
-using CaseStudy.Domain.Interfaces;
+using CaseStudy.Domain.Common;
 
-namespace CaseStudy.Application.Interfaces;
+namespace CaseStudy.Application.Common;
 
 public interface IRepository<T> where T : class, IEntity
 {

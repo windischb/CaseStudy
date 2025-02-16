@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi.Models;
-using Microsoft.OpenApi.Services;
 
 namespace CaseStudy.Api;
 
@@ -15,10 +14,10 @@ internal sealed class BearerSecuritySchemeTransformer(IAuthenticationSchemeProvi
         {
             var requirements = new Dictionary<string, OpenApiSecurityScheme>
             {
-                ["Bearer"] = new OpenApiSecurityScheme
+                ["Bearer"] = new()
                 {
                     Type = SecuritySchemeType.Http,
-                    Scheme = "bearer", // "bearer" refers to the header name here
+                    Scheme = "bearer",
                     In = ParameterLocation.Header,
                     BearerFormat = "Json Web Token"
                 }
@@ -26,37 +25,37 @@ internal sealed class BearerSecuritySchemeTransformer(IAuthenticationSchemeProvi
             document.Components ??= new OpenApiComponents();
             document.Components.SecuritySchemes = requirements;
 
-            // Iterate through all paths in the document.
-            foreach (var pathPair in document.Paths)
+            MarkAuthorizedEndpoints(document, context);
+        }
+    }
+
+    public void MarkAuthorizedEndpoints(OpenApiDocument document, OpenApiDocumentTransformerContext context)
+    {
+
+        foreach (var (key, value) in document.Paths)
+        {
+            var pathKey = key.TrimStart('/');
+
+            var matchingDescriptions = context.DescriptionGroups.SelectMany(g => g.Items)
+                .Where(desc => string.Equals(desc.RelativePath?.TrimEnd('/'), pathKey, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            foreach (var operationPair in value.Operations)
             {
-                var pathKey = pathPair.Key.TrimStart('/');
-                var pathItem = pathPair.Value;
+                var httpMethod = operationPair.Key.ToString().ToUpperInvariant();
+                var operation = operationPair.Value;
 
-                // Find all ApiDescriptions that match this path.
-                // (This matching logic might need adjustment based on your route templates.)
-                var matchingDescriptions = context.DescriptionGroups.SelectMany(g => g.Items)
-                    .Where(desc => string.Equals(desc.RelativePath?.TrimEnd('/'), pathKey, StringComparison.OrdinalIgnoreCase))
-                    .ToList();
+                var requiresAuth = matchingDescriptions.Any(desc =>
+                    string.Equals(desc.HttpMethod, httpMethod, StringComparison.OrdinalIgnoreCase)
+                    && desc.ActionDescriptor.EndpointMetadata.Any(m => m is AuthorizeAttribute)
+                );
 
-                // For each operation (GET, POST, etc.) in the path:
-                foreach (var operationPair in pathItem.Operations)
+                if (requiresAuth)
                 {
-                    var httpMethod = operationPair.Key.ToString().ToUpperInvariant();
-                    var operation = operationPair.Value;
-
-                    // Check if any of the matching ApiDescriptions for this path and method have [Authorize]
-                    bool requiresAuth = matchingDescriptions.Any(desc =>
-                        string.Equals(desc.HttpMethod, httpMethod, StringComparison.OrdinalIgnoreCase)
-                        && desc.ActionDescriptor.EndpointMetadata.Any(m => m is AuthorizeAttribute)
-                    );
-
-                    if (requiresAuth)
+                    operation.Security.Add(new OpenApiSecurityRequirement
                     {
-                        operation.Security.Add(new OpenApiSecurityRequirement
-                        {
-                            [new OpenApiSecurityScheme { Reference = new OpenApiReference { Id = "Bearer", Type = ReferenceType.SecurityScheme } }] = Array.Empty<string>()
-                        });
-                    }
+                        [new OpenApiSecurityScheme { Reference = new OpenApiReference { Id = "Bearer", Type = ReferenceType.SecurityScheme } }] = Array.Empty<string>()
+                    });
                 }
             }
         }

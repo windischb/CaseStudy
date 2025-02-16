@@ -1,29 +1,30 @@
-﻿using CaseStudy.Application.Interfaces;
-using CaseStudy.Domain;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
+using CaseStudy.Application;
+using CaseStudy.Application.Common;
+using ErrorOr;
 
 namespace CaseStudy.Api.Controllers;
 
 [Route("api/contactpersons")]
 [ApiController]
 [Authorize]
-public class ContactPersonsController(IContactPersonRepository contactPersonRepository, IOutputCacheStore cacheStore) : ControllerBase
+public class ContactPersonsController(IContactPersonService contactPersonService, IOutputCacheStore cacheStore) : ControllerBase
 {
     [HttpGet]
     [OutputCache(PolicyName = "TagById")]
-    public async Task<ActionResult<IEnumerable<ContactPerson>>> GetAll()
+    public async Task<ActionResult<IEnumerable<ContactPersonDto>>> GetAll()
     {
-        var contactPersons = await contactPersonRepository.GetAllAsync();
+        var contactPersons = await contactPersonService.GetAllAsync();
         return Ok(contactPersons);
     }
         
     [HttpGet("{id}")]
     [OutputCache(PolicyName = "TagById")]
-    public async Task<ActionResult<ContactPerson>> GetById(Guid id)
+    public async Task<ActionResult<ContactPersonDto>> GetById(Guid id)
     {
-        var contactPerson = await contactPersonRepository.GetByIdAsync(id);
+        var contactPerson = await contactPersonService.GetByIdAsync(id);
         if (contactPerson == null)
             return NotFound();
         return Ok(contactPerson);
@@ -31,23 +32,28 @@ public class ContactPersonsController(IContactPersonRepository contactPersonRepo
         
     [HttpPost]
     [Authorize(Policy = "Admin")]
-    public async Task<IActionResult> Create([FromBody] ContactPerson vendor)
+    public async Task<IActionResult> Create([FromBody] CreateContactPersonDto dto)
     {
-        await contactPersonRepository.AddAsync(vendor);
-        await cacheStore.EvictByTagAsync("ContactPersons-All", this.HttpContext.RequestAborted);
-        return CreatedAtAction(nameof(GetById), new { id = vendor.Id }, vendor);
+        var newContactPersonId = await contactPersonService.AddAsync(dto);
+        await cacheStore.EvictByTagAsync("ContactPersons-All", HttpContext.RequestAborted);
+        return CreatedAtAction(nameof(GetById), new { id = newContactPersonId }, dto);
     }
         
     [HttpPut("{id}")]
     [Authorize(Policy = "Admin")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] ContactPerson vendor)
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateContactPersonDto dto)
     {
-        if (id != vendor.Id)
-            return BadRequest();
-            
-        await contactPersonRepository.UpdateAsync(vendor);
-        await cacheStore.EvictByTagAsync("ContactPersons-All", this.HttpContext.RequestAborted);
-        await cacheStore.EvictByTagAsync($"TagById-ContactPersons-{id}", this.HttpContext.RequestAborted);
+        var updateResult = await contactPersonService.UpdateAsync(id, dto);
+        if (updateResult.IsError)
+        {
+            if (updateResult.FirstError == Error.NotFound())
+            {
+                return NotFound(updateResult.FirstError.Code);
+            }
+            return BadRequest(updateResult.FirstError);
+        }
+        await cacheStore.EvictByTagAsync("ContactPersons-All", HttpContext.RequestAborted);
+        await cacheStore.EvictByTagAsync($"TagById-ContactPersons-{id}", HttpContext.RequestAborted);
         return NoContent();
     }
         
@@ -55,9 +61,9 @@ public class ContactPersonsController(IContactPersonRepository contactPersonRepo
     [Authorize(Policy = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        await contactPersonRepository.DeleteAsync(id);
-        await cacheStore.EvictByTagAsync("ContactPersons-All", this.HttpContext.RequestAborted);
-        await cacheStore.EvictByTagAsync($"TagById-ContactPersons-{id}", this.HttpContext.RequestAborted);
+        await contactPersonService.DeleteAsync(id);
+        await cacheStore.EvictByTagAsync("ContactPersons-All", HttpContext.RequestAborted);
+        await cacheStore.EvictByTagAsync($"TagById-ContactPersons-{id}", HttpContext.RequestAborted);
         return NoContent();
     }
 }
