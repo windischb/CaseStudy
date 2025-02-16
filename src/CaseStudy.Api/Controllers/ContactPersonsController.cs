@@ -1,5 +1,6 @@
 ﻿using CaseStudy.Application.Interfaces;
 using CaseStudy.Domain;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 
@@ -7,10 +8,11 @@ namespace CaseStudy.Api.Controllers;
 
 [Route("api/contactpersons")]
 [ApiController]
+[Authorize]
 public class ContactPersonsController(IContactPersonRepository contactPersonRepository, IOutputCacheStore cacheStore) : ControllerBase
 {
     [HttpGet]
-    [OutputCache(Tags = ["ContactPersons-All"])]
+    [OutputCache(PolicyName = "TagById")]
     public async Task<ActionResult<IEnumerable<ContactPerson>>> GetAll()
     {
         var contactPersons = await contactPersonRepository.GetAllAsync();
@@ -28,6 +30,7 @@ public class ContactPersonsController(IContactPersonRepository contactPersonRepo
     }
         
     [HttpPost]
+    [Authorize(Policy = "Admin")]
     public async Task<IActionResult> Create([FromBody] ContactPerson vendor)
     {
         await contactPersonRepository.AddAsync(vendor);
@@ -36,6 +39,7 @@ public class ContactPersonsController(IContactPersonRepository contactPersonRepo
     }
         
     [HttpPut("{id}")]
+    [Authorize(Policy = "Admin")]
     public async Task<IActionResult> Update(Guid id, [FromBody] ContactPerson vendor)
     {
         if (id != vendor.Id)
@@ -48,6 +52,7 @@ public class ContactPersonsController(IContactPersonRepository contactPersonRepo
     }
         
     [HttpDelete("{id}")]
+    [Authorize(Policy = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await contactPersonRepository.DeleteAsync(id);

@@ -10,7 +10,7 @@ namespace CaseStudy.Api;
 public class Program
 {
 
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         Log.Logger = new LoggerConfiguration()
             .WriteTo.Console()
@@ -19,7 +19,9 @@ public class Program
         try
         {
             Log.Information("Starting web host");
-            CreateHostBuilder(args).Build().Run();
+            var host = CreateHostBuilder(args).Build();
+            await Infrastructure.DbMigrator.Migrate(host.Services);
+            await host.RunAsync();
         }
         catch (Exception ex)
         {
@@ -27,7 +29,7 @@ public class Program
         }
         finally
         {
-            Log.CloseAndFlush();
+            await Log.CloseAndFlushAsync();
         }
     }
 
@@ -37,16 +39,13 @@ public class Program
             {
                 if (!Debugger.IsAttached)
                 {
-                    config.AddJsonFile(PathHelper.GetFullPath("config.json"), optional: true, reloadOnChange:true);
+                    config.AddJsonFile(PathHelper.GetFullPath("config.json"), optional: true, reloadOnChange: true);
                 }
                 config.AddEnvironmentVariables();
             })
             .UseSerilog((hostingContext, loggerConfiguration) =>
                 {
-
-                    var startUpConfiguration = new StartUpConfiguration();
-                    hostingContext.Configuration.Bind(startUpConfiguration);
-                    
+                    var startUpConfiguration = hostingContext.Configuration.Get<StartUpConfiguration>();
                     foreach (var (key, value) in startUpConfiguration.Logging.LogLevels)
                     {
                         if (key.Equals("default", StringComparison.OrdinalIgnoreCase) || key.Equals("*", StringComparison.OrdinalIgnoreCase))
@@ -67,30 +66,19 @@ public class Program
             {
                 webBuilder.UseKestrel(ConfigureKestrel).UseStartup<Startup>();
             });
-    
+
     private static void ConfigureKestrel(WebHostBuilderContext context, KestrelServerOptions serverOptions)
     {
 
         var config = context.Configuration.Get<StartUpConfiguration>()!;
         var listenIp = IPAddress.Parse(config.ListeningIP);
-        
-        if (config.HttpPort > 0)
-        {
-            serverOptions.Listen(listenIp, config.HttpPort, listenOptions =>
-            {
-                listenOptions.Protocols = HttpProtocols.Http1;
-            });
-        }
 
-        if (config.HttpsPort > 0)
+        serverOptions.Listen(listenIp, config.HttpsPort, listenOptions =>
         {
-            serverOptions.Listen(listenIp, config.HttpsPort, listenOptions =>
-            {
-                listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
-                listenOptions.UseHttps(PathHelper.GetFullPath(config.HttpsCertPath), config.HttpsCertPassword);
+            listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
+            listenOptions.UseHttps(PathHelper.GetFullPath(config.HttpsCertPath), config.HttpsCertPassword);
 
-            });
-        }
+        });
 
     }
 

@@ -1,5 +1,6 @@
 ﻿using CaseStudy.Application.Interfaces;
 using CaseStudy.Domain;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 
@@ -7,10 +8,11 @@ namespace CaseStudy.Api.Controllers;
 
 [Route("api/bankaccounts")]
 [ApiController]
+[Authorize]
 public class BankAccountsController(IBankAccountRepository bankAccountRepository, IOutputCacheStore cacheStore) : ControllerBase
 {
     [HttpGet]
-    [OutputCache(Tags = ["BankAccounts-All"])]
+    [OutputCache(PolicyName = "TagById")]
     public async Task<ActionResult<IEnumerable<BankAccount>>> GetAll()
     {
         var bankAccounts = await bankAccountRepository.GetAllAsync();
@@ -28,6 +30,7 @@ public class BankAccountsController(IBankAccountRepository bankAccountRepository
     }
         
     [HttpPost]
+    [Authorize(Policy = "Admin")]
     public async Task<IActionResult> Create([FromBody] BankAccount vendor)
     {
         await bankAccountRepository.AddAsync(vendor);
@@ -36,6 +39,7 @@ public class BankAccountsController(IBankAccountRepository bankAccountRepository
     }
         
     [HttpPut("{id}")]
+    [Authorize(Policy = "Admin")]
     public async Task<IActionResult> Update(Guid id, [FromBody] BankAccount vendor)
     {
         if (id != vendor.Id)
@@ -48,6 +52,7 @@ public class BankAccountsController(IBankAccountRepository bankAccountRepository
     }
         
     [HttpDelete("{id}")]
+    [Authorize(Policy = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await bankAccountRepository.DeleteAsync(id);

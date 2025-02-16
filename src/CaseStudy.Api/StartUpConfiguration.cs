@@ -8,10 +8,7 @@ public class StartUpConfiguration
     [Description("Limit API to listen only on specified IP's")]
     public string ListeningIP { get; set; } = "0.0.0.0";
 
-    [Description("API Listening HTTP Port, set to 0 to turn off HTTP")]
-    public int HttpPort { get; set; } = 80;
-
-    [Description("API Listening HTTPS Port, set to 0 to turn off HTTPS")]
+    [Description("API Listening HTTPS Port")]
     public int HttpsPort { get; set; } = 443;
 
     [Description("Path to the SSL Certificate used for HTTPS")]

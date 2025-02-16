@@ -1,6 +1,7 @@
 
 using CaseStudy.Api.Helpers;
 using CaseStudy.Infrastructure;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.OpenApi.Models;
 
@@ -30,13 +31,25 @@ public class Startup(IConfiguration configuration)
                     var actionDescriptor = request.HttpContext.GetEndpoint()?.Metadata
                         .GetMetadata<ControllerActionDescriptor>();
                     var s = request.HttpContext.Request.RouteValues["id"]?.ToString();
-                    if (actionDescriptor is null || string.IsNullOrWhiteSpace(s))
+                    if (actionDescriptor is null)
                     {
                         return null;
+                    }
+                    if (string.IsNullOrWhiteSpace(s))
+                    {
+                        return $"{actionDescriptor.ControllerName}-All";
                     }
                     return $"TagById-{actionDescriptor.ControllerName}-{s}";
                 }));
             });
+
+        
+        services.AddAuthorization(options =>
+            {
+                options.AddPolicy("Admin", builder => builder.RequireRole("Administrator"));
+            })
+            .AddAuthentication();
+            
 
         services.AddInfrastructureServices(Configuration.DbSettings.ConnectionString);
 
@@ -44,15 +57,16 @@ public class Startup(IConfiguration configuration)
         {
             options.AddDocumentTransformer((document, _, _) =>
             {
-                var newServers = document.Servers.Select(s => 
-                    new OpenApiServer { Url = IPAddressHelper.GenerateOpenApiUri(s.Url).TrimEnd('/')}
+                var newServers = document.Servers.Select(s =>
+                    new OpenApiServer { Url = IPAddressHelper.GenerateOpenApiUri(s.Url).TrimEnd('/') }
                 ).ToList();
-                
+
                 document.Servers.Clear();
                 document.Servers = newServers;
                 return Task.CompletedTask;
             });
-           
+
+            options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
         });
 
         services.AddControllers();
@@ -63,7 +77,6 @@ public class Startup(IConfiguration configuration)
 
     public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
     {
-        app.ApplicationServices.AutomaticDatabaseMigration(true);
 
         if (env.IsDevelopment())
         {
@@ -72,23 +85,23 @@ public class Startup(IConfiguration configuration)
         app.UseResponseCompression();
 
         app.UseRouting();
+
+        app.UseAuthentication();
+        app.UseAuthorization();
         app.UseOutputCache();
 
-        if (env.IsDevelopment())
-        {
-            app.UseEndpoints((e) =>
-            {
-                e.MapOpenApi();
-            });
-            app.UseSwaggerUI(opts =>
-            {
-                opts.SwaggerEndpoint("/openapi/v1.json", "CaseStudy Api");
-               
-            });
-        }
+        app.MapIdentityApi();
+
         app.UseEndpoints(endpoints =>
         {
+            endpoints.MapOpenApi();
             endpoints.MapControllers();
+        });
+
+        app.UseSwaggerUI(opts =>
+        {
+            opts.SwaggerEndpoint("/openapi/v1.json", "CaseStudy Api");
+
         });
 
     }

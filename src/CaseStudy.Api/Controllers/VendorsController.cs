@@ -1,5 +1,6 @@
 ﻿using CaseStudy.Application.Interfaces;
 using CaseStudy.Domain;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 
@@ -7,10 +8,11 @@ namespace CaseStudy.Api.Controllers;
 
 [Route("api/vendors")]
 [ApiController]
+[Authorize]
 public class VendorsController(IVendorRepository vendorRepository, IOutputCacheStore cacheStore) : ControllerBase
 {
     [HttpGet]
-    [OutputCache(Tags = ["Vendors-All"])]
+    [OutputCache(PolicyName = "TagById")]
     public async Task<ActionResult<IEnumerable<Vendor>>> GetAll()
     {
         var vendors = await vendorRepository.GetAllAsync();
@@ -28,6 +30,7 @@ public class VendorsController(IVendorRepository vendorRepository, IOutputCacheS
     }
         
     [HttpPost]
+    [Authorize(Policy = "Admin")]
     public async Task<IActionResult> Create([FromBody] Vendor vendor)
     {
         await vendorRepository.AddAsync(vendor);
@@ -36,6 +39,7 @@ public class VendorsController(IVendorRepository vendorRepository, IOutputCacheS
     }
         
     [HttpPut("{id}")]
+    [Authorize(Policy = "Admin")]
     public async Task<IActionResult> Update(Guid id, [FromBody] Vendor vendor)
     {
         if (id != vendor.Id)
@@ -48,6 +52,7 @@ public class VendorsController(IVendorRepository vendorRepository, IOutputCacheS
     }
         
     [HttpDelete("{id}")]
+    [Authorize(Policy = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await vendorRepository.DeleteAsync(id);
